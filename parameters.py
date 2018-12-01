@@ -33,7 +33,7 @@ class ParametersKeys(object):
                 self.__val =  [self.__default for _ in range(self.__length)]
         return self.__val
 
-    def reset_val(self, debug):
+    def reset_val(self, debug=False):
         self.__val = None
 
     def set_val(self, val, debug=False):
