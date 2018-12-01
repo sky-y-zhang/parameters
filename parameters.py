@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 __all__ = ['Parameters']
 
-import json, copy
+import re, json, copy
 
 
 class ParametersKeys(object):
@@ -106,10 +106,23 @@ class Parameters(object):
             self.__keys_objects[key].set_val(val, self.__debug)
 
     def __repr__(self):
+        return self.__formated_values()
+
+    def __formated_values(self):
         keys = self.__keys_objects.keys()
         vals = [self.__getattr__(key) if not isinstance(self.__getattr__(key), list) else str(self.__getattr__(key)) for key in keys ]
+        vals = [self.__getattr__(key) if not isinstance(self.__getattr__(key), list) else self.__getattr__(key) for key in keys ]
         keyval = dict(zip(keys, vals))
-        return json.dumps(keyval)
+        string = json.dumps(keyval, indent=2)
+        # string = re.sub('\s*{\s*"(.)": (\d+),\s*"(.)": (\d+)\s*}(,?)\s*', r'{"\1":\2,"\3":\4}\5', string)
+        string = re.sub('\n\s+(?=\w|])', ' ', string)
+        return string
+
+    def __format_string_parameters(self, json_obj=None):
+        json_obj = json_obj or self.dump_parameters()
+        string = json.dumps(json_obj, indent=2)
+        string = re.sub('\n\s+(?=\w|])', ' ', string)
+        return string
 
     def load_config(self, keys_config):
         if isinstance(keys_config, dict):
@@ -178,13 +191,20 @@ class Parameters(object):
             }
         if filename is None:
             return parameters_obj
-        elif isinstance(filename, str):
+        else:
+            parameters_obj = self.__format_string_parameters(parameters_obj)
+        if isinstance(filename, str):
             with open(filename, 'w') as fd:
-                json.dump(parameters_obj, fd)
+                fd.write(parameters_obj)
         elif hasattr(filename, 'write'):
-            json.dump(filename, fd)
+            filename.write(parameters_obj)
         else:
             raise ValueError('Please give a valid filename/filehandle')
+
+    def string_parameters(self, parameters_obj=None):
+        parameters_obj = parameters_obj or self.dump_parameters()
+        return self.__format_string_parameters(parameters_obj)
+        
 
     def update_key(self, key, Type, enumerateItems= None, length=1, default=None):
         assert Type in ['int', 'float', 'string', 'enumerate'], f'{Type} not supported'
@@ -284,10 +304,19 @@ def test():
     print('config:', params2.dump_config())
     print(params2)
 
-    print(json.dumps(params2.dump_config(), indent=4))
+    print(params2.string_parameters())
 
-    params2.update_key('-', 'int')
+    try:
+        params2.update_key('-', 'int')
+        print(params2)
+    except Exception as e:
+        print(e)
+    
+    params2.update_key('lda_U', 'float', length=10);
+    print(params2.string_parameters())
     print(params2)
+
+    params2.dump_parameters('hello.json')
 
 if __name__ == '__main__':
     test()
