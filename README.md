@@ -31,4 +31,19 @@ An integer/float array could be initiate with
 {"test_key": "[0.0, 0.0, 0.0, 0.0, 0.0, 0.0]"}
 ```
 
+You could get a beautiful output with the instance or use the print function
+```python
+>>> params
+{
+  "string": "STRINGSING",
+  "int": 1,
+  "float": 1.1,
+  "enumerate": "1",
+  "floatArray": [ 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0 ],
+  "intArray": [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ]
+}
+```
+
+ You could also dump the config with dump_config(), or dump the parameters with dump_parameters()
+
 Have Fun!
