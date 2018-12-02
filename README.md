@@ -31,4 +31,16 @@ An integer/float array could be initiate with
 {"test_key": "[0.0, 0.0, 0.0, 0.0, 0.0, 0.0]"}
 ```
 
+You could get a output like
+```python
+{
+  "string": "STRINGSING",
+  "int": 1,
+  "float": 1.1,
+  "enumerate": "1",
+  "floatArray": [ 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0 ],
+  "intArray": [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ]
+}
+```
+
 Have Fun!
