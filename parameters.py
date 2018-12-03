@@ -9,12 +9,14 @@ class ParametersArray(list):
 
 class ParametersKeys(object):
     def __init__(self, key, Type='int', val=None, 
-                enumerateItems=None, isArray=False, length=1, 
+                enumerateItems=None, enumerateVals=None,
+                isArray=False, length=1, 
                 default=None, comments='', reference=''):
         self._key = key
         self._type= Type
         self._val = val
         self._enumerateItems = enumerateItems
+        self._enumerateVals  = enumerateVals 
         self._isArray = isArray
         self._length = length
         self._default = default
@@ -106,8 +108,7 @@ class ParametersKeys(object):
         assert re.sub('\d', '', self._key).replace('_', '').isalpha(), 'Parameters Errror: key \"'+str(self._key)+'\": only letter/number and _ is allowed in key'
         if self._isArray: 
             assert self._type in ['float', 'int', 'bool'], 'Parameters ERROR: only float/int/bool can be element of array'
-        if self._type == 'enumerate':
-            assert isinstance(self._enumerateItems, list) and len(self._enumerateItems) > 0, 'Parameters Errror: enumerate must have items'
+        
         elif self._type == 'bool':
             self._enumerateItems = [True, False]
         default = self._default
@@ -133,7 +134,7 @@ class ParametersKeys(object):
 
     def __get_config(self):
         config_dict = {}
-        for key in ['key', 'type', "enumerateItems", "isArray", "length", "default", "comments", "reference"]:
+        for key in ['key', 'type', "enumerateItems", "enumerateVals", "isArray", "length", "default", "comments", "reference"]:
                 config_dict[key] = self.__getattr__('_'+key)
         return config_dict
 
@@ -157,7 +158,7 @@ class Parameters(object):
         if key[:1+len(self.__class__.__name__)] == '_'+str(self.__class__.__name__):
             object.__getattribute__(self, key)
         else:
-            assert key in self.__keys_config.keys(), 'Parameters Errror: '+str(key)+' no in parameters config, please use add_key to add key'
+            assert key in self.__keys_config.keys(), 'Parameters Errror: '+str(key)+' not in parameters config, please use add_key to add key'
             return self.__keys_objects[key]
 
     def __setattr__(self, key, val):
@@ -191,12 +192,19 @@ class Parameters(object):
         for key, feature in keys_config.items():
             Type = feature['type']
             enumerateItems = feature.get('enumerateItems', None)
+            enumerateVals = feature.get('enumerateVals', None)
+            isArray = feature.get('isArray', False)
             length = feature.get('length', 1)
             default = feature.get('default', None)
+            comments = feature.get('comments', '')
+            reference = feature.get('reference', '')
             try:
-                self.update_key(key, Type, enumerateItems, length, default)
+                self.update_key(key, Type, 
+                    enumerateItems=enumerateItems, enumerateVals=enumerateVals, 
+                    isArray=isArray, length=length, 
+                    default=default, comments=comments, reference=reference)
             except Exception as e:
-                print('Load config: update key error '+str(e))
+                raise e
 
     def dump_config(self, filename=None):
         if filename is None:
@@ -253,11 +261,39 @@ class Parameters(object):
         else:
             raise ValueError('Please give a valid filename/filehandle')
 
-    def update_key(self, key, Type, enumerateItems= None, isArray=False, length=1, default=None, comments=''):
-        assert Type in ['int', 'float', 'string', 'enumerate', 'bool'], 'Parameters Errror: '+str(Type)+' not supported'
-        assert isinstance(length, int) and length > 0
-        _kobj = ParametersKeys(key, Type, None, enumerateItems = enumerateItems, isArray=isArray, 
-            length=length, default=default, comments=comments)
+    def update_key(self, key, Type, 
+            enumerateItems= None, enumerateVals = None,
+            isArray=False, length=1, default=None, 
+            comments='', reference=''):
+        assert Type in ['int', 'float', 'string', 'enumerate', 'bool'], 'Parameters ERROR: '+str(Type)+' not supported'
+        # import pdb; pdb.set_trace();
+        if isinstance(length, six.string_types):
+            assert length.isdigit(), 'Parameters ERROR: Please give a int string'
+            length = int(length)
+        assert isinstance(length, int) and length > 0, 'Parameters ERROR: '+key+' :length should be int and > 0'
+        if isinstance(default, six.string_types) and Type in ['float', 'int'] \
+            and re.match("^\d+?\.\d+?$|\d+", default):
+            default = float(default)
+        if Type == 'enumerate':
+            if isinstance(enumerateItems, six.string_types):
+                # try to split enumerateItems with , or | 
+                enumerateItems = re.split('\s*\|\s*|\s*,\s*', enumerateItems)
+            assert isinstance(enumerateItems, list) and len(enumerateItems) > 0, 'Parameters Errror: enumerate must have items'
+            if enumerateVals is not None and isinstance(enumerateVals, six.string_types):
+                enumerateVals = re.split('\s*\|\s*|\s*,\s*', enumerateVals)
+                assert len(enumerateVals) == len(enumerateItems), 'enumerateItems and enumerateVals should have same length'
+        if isinstance(isArray, six.string_types):
+            if isArray.lower() =='true':
+                isArray = True
+            elif isArray.lower() == 'false':
+                isArray = False
+            else:
+                raise ValueError('isArray as a string should be true/false')
+
+        _kobj = ParametersKeys(key, Type, 
+            enumerateItems = enumerateItems, enumerateVals = enumerateVals,
+            isArray=isArray, length=length, 
+            default=default, comments=comments, reference=reference)
         # _feature = {'key': key, 'type': Type, 'enumerateItems': enumerateItems, 'length': length, 'default': default, "comments": comments}
         self.__keys_objects.update({key: _kobj})
         self.__keys_config.update({key: _kobj._ParametersKeys__get_config()})
@@ -412,7 +448,7 @@ def test():
         print(e)
     print(_params)
 
-def parse_json(json_file):
+def parse_primitive_json(json_file):
     with open(json_file) as fd:
         params_dict = json.load(fd)
     # print(json.dumps(params_dict, indent=4))
@@ -438,15 +474,27 @@ def parse_json(json_file):
     params.dump_config('refined_'+json_file)
 
 
+def parse_json(json_file):
+    params = Parameters(debug=True)
+    params.load_config(json_file)
+    params.dump_config('refined_'+json_file)
+
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('-t', '--test',  help='run '+str(__file__)+' test', action='store_true')
-    parser.add_argument('-p', '--parse', help='parse json file', nargs=1)
+    parser.add_argument('-pr', '--parse_primitive', help='parse primitive json file', nargs=1)
+    parser.add_argument('-p', '--parse', help='parse config json file', nargs=1)
     args = parser.parse_args()
+    print(args)
     if args.test:
         test()
-    else:
+    elif args.parse is not None and len(args.parse)>0:
         parse_json(args.parse[0])
+    elif args.parse_primitive is not None and  len(args.parse_primitive)>0:
+        parse_primitive_json(args.parse_primitive[0])
+    else:
+        raise ValueError
+
 
 
