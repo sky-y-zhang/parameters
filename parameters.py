@@ -8,109 +8,134 @@ class ParametersArray(list):
 
 
 class ParametersKeys(object):
-    def __init__(self, key, Type='int', val=None, isBoolean=False, enumerateItems=None, length=1, default=None, comments=''):
-        self.__key = key
-        self.__type= Type
-        self.__val = val
-        self.__length = length
-        self.__enumerateItems = enumerateItems
-        self.__default = default
+    def __init__(self, key, Type='int', val=None, 
+                enumerateItems=None, isArray=False, length=1, 
+                default=None, comments='', reference=''):
+        self._key = key
+        self._type= Type
+        self._val = val
+        self._enumerateItems = enumerateItems
+        self._isArray = isArray
+        self._length = length
+        self._default = default
+        self._comments = comments
+        self._reference = reference
         self.__self_check()
-        self.__comments = comments
+
+    @property
+    def _length(self):
+        if not hasattr(self, '_param_length'):
+            self._param_length = 1
+        return self._param_length
+    
+    @_length.setter
+    def _length(self, length):
+        self._param_length = length
 
     # def __setattr__(self, key, val):
     #     pass
     def __getattr__(self, key):
-        if self.__type == 'enumerate' and key in self.__enumerateItems:
+        if self._type == 'enumerate' and key in self._enumerateItems:
             return key
         return object.__getattribute__(self, key)
 
     def __repr__(self):
-        string = 'key '+self.__key+': '+str(self.get_val())
-        if self.__type == 'enumerate':
-            string += '\n    '+str(self.__enumerateItems)
-        if self.__comments != '':
-            string += '\n    '+self.__comments
+        string = 'key '+self._key+': '+str(self.__get_val())
+        if self._type == 'enumerate':
+            string += '\n    '+str(self._enumerateItems)
+        if self._comments != '':
+            string += '\n    '+self._comments
         return string
 
-    def get_val(self, debug=False):
-        if self.__val is None:
+    def __get_val(self, debug=False):
+        if self._val is None:
             if debug: print('val is None, set to default')
-            self.set_val_as_default(debug)
-        return self.__val
+            self.__set_val_as_default(debug)
+        return self._val
 
-    def set_val(self, val, debug=False):
-        if self.__length == 1:
-            val = self.format_val(val)
+    def __set_val(self, val, debug=False):
+        if self._length == 1:
+            val = self.__format_val(val)
         else:
-            assert isinstance(val, list) and len(val) == self.__val, 'Parameters Errror: Please give '+str(self.__length)+' values'
+            assert isinstance(val, list) and len(val) == self._val, 'Parameters Errror: Please give '+str(self._length)+' values'
             for i, x in enumerate(val):
-                val[i] = self.format_val(x)
-        self.__val = val
+                val[i] = self.__format_val(x)
+        self._val = val
 
-    def reset_val(self, debug=False):
-        self.set_val_as_default(debug)
+    def __reset_val(self, debug=False):
+        self.__set_val_as_default(debug)
 
-    def set_val_as_default(self, debug=False):
-        if self.__length == 1:
-            self.__val =  self.__default
+    def __set_val_as_default(self, debug=False):
+        if self._length == 1:
+            self._val =  self._default
         else:
-            self.__val =  [self.__default for _ in range(self.__length)]
+            self._val =  [self._default for _ in range(self._length)]
 
-    def format_val(self, val, debug=False):
-        if self.__type == 'float':
-            assert isinstance(val, float) or isinstance(val, int), 'Parameters Errror: key \"'+str(self.__key)+'\" is float, please give float/int'
+    def __format_val(self, val, debug=False):
+        if self._type == 'float':
+            assert isinstance(val, float) or isinstance(val, int), 'Parameters Errror: key \"'+str(self._key)+'\" is float, please give float/int'
             val = float(val)
-        elif self.__type == 'int':
-            assert isinstance(val, int) or isinstance(val, float) and val%1==0.0, 'Parameters Errror: key \"'+str(self.__key)+'\" is int, please give an int'
+        elif self._type == 'int':
+            assert isinstance(val, int) or isinstance(val, float) and val%1==0.0, 'Parameters Errror: key \"'+str(self._key)+'\" is int, please give an int'
             val = int(val)
-        elif self.__type == 'string':
-            assert isinstance(val, six.string_types), 'Parameters Errror: key \"'+str(self.__key)+'\" Type is string'
-        elif self.__type == 'enumerate':
-            assert val in self.__enumerateItems, 'Parameters Errror: key \"'+str(self.__key)+'\" is a enumerate, items: '+str(self.__enumerateItems)
+        elif self._type == 'string':
+            assert isinstance(val, six.string_types), 'Parameters Errror: key \"'+str(self._key)+'\" Type is string'
+        elif self._type == 'enumerate':
+            assert val in self._enumerateItems, 'Parameters Errror: key \"'+str(self._key)+'\" is a enumerate, items: '+str(self._enumerateItems)
         else:
-            raise ValueError(str(self.__type)+' not support')
+            raise ValueError(str(self._type)+' not support')
         return val
 
     def __getitem__(self, key):
-        return self.__val[key]
+        return self._val[key]
 
     def __setitem__(self, key, val):
-        assert self.__length > 1, 'Parameters Errror: key \"'+str(self.__key)+'\" is not a valid key for Array set'
-        assert isinstance(key, int) and 0<=key<self.__length, 'Parameters Errror: '+str(key)+' is not a int, or index out of range '+str(self.__length)
-        val = self.format_val(val)
-        self.__val[key] = val
+        assert self._length > 1, 'Parameters Errror: key \"'+str(self._key)+'\" is not a valid key for Array set'
+        assert isinstance(key, int) and 0<=key<self._length, 'Parameters Errror: '+str(key)+' is not a int, or index out of range '+str(self._length)
+        val = self.__format_val(val)
+        self._val[key] = val
 
     def __eq__(self, other):
-        if isinstance(other, self.__class__):
-            return self.__val == other.__val
-        return self.__val == other
+        if isinstance(other, self._class__):
+            return self._val == other.__val
+        return self._val == other
 
     def __self_check(self):
         # check key
-        assert re.match('^\d', self.__key) is None and re.sub('\d', '', self.__key).replace('_', '').isalpha(), 'Parameters Errror: key \"'+str(self.__key)+'\": only letter/number and _ is allowed in key, number cannot be the start'
-        if self.__length > 1: 
-            assert self.__type in ['float', 'int'], 'Parameters ERROR: only float/int can be element of array'
-        if self.__type == 'enumerate':
-            assert isinstance(self.__enumerateItems, list) and len(self.__enumerateItems) > 0, 'Parameters Errror: enumerate must have items'
-        default = self.__default
-        if self.__type == 'float':
+        assert re.match('^\d|^_', self._key) is None, 'Parameters ERROR: number or _ cannot be first char'
+        assert re.sub('\d', '', self._key).replace('_', '').isalpha(), 'Parameters Errror: key \"'+str(self._key)+'\": only letter/number and _ is allowed in key'
+        if self._isArray: 
+            assert self._type in ['float', 'int', 'bool'], 'Parameters ERROR: only float/int/bool can be element of array'
+        if self._type == 'enumerate':
+            assert isinstance(self._enumerateItems, list) and len(self._enumerateItems) > 0, 'Parameters Errror: enumerate must have items'
+        elif self._type == 'bool':
+            self._enumerateItems = [True, False]
+        default = self._default
+        if self._type == 'float':
             default = default or 0.
-            assert isinstance(default, int) or isinstance(default, float), 'Parameters Errror: key \"'+str(self.__key)+'\": default should be float, instead of '+str(default)
+            assert isinstance(default, int) or isinstance(default, float), 'Parameters Errror: key \"'+str(self._key)+'\": default should be float, instead of '+str(default)
             default = float(default)
-        elif self.__type == 'int':
+        elif self._type == 'int':
             default = 0
-            assert isinstance(default, int) or isinstance(default, float) and default%1==0.0, 'Parameters Errror: key \"'+str(self.__key)+'\": default should be int, instead of '+str(default)
-        elif self.__type == 'string':
+            assert isinstance(default, int) or isinstance(default, float) and default%1==0.0, 'Parameters Errror: key \"'+str(self._key)+'\": default should be int, instead of '+str(default)
+        elif self._type == 'string':
             default = default or ''
-            assert isinstance(default, six.string_types), 'Parameters Errror: key \"'+str(self.__key)+'\": default should be string, instead of '+str(default)
-        elif self.__type == 'enumerate':
-            default = default or self.__enumerateItems[0]
-            print(default, type(default), default in self.__enumerateItems)
-            assert isinstance(default, six.string_types) and default in self.__enumerateItems, 'Parameters Errror: key \"'+str(self.__key)+'\": default should be in '+str(self.__enumerateItems)+', instead of '+str(default)
-        self.__default = default
-        self.set_val_as_default()
+            assert isinstance(default, six.string_types), 'Parameters Errror: key \"'+str(self._key)+'\": default should be string, instead of '+str(default)
+        elif self._type == 'enumerate':
+            default = default or self._enumerateItems[0]
+            # print(default, type(default), default in self._enumerateItems)
+            assert isinstance(default, six.string_types) and default in self._enumerateItems, 'Parameters Errror: key \"'+str(self._key)+'\": default should be in '+str(self._enumerateItems)+', instead of '+str(default)
+        elif self._type == 'bool':
+            default = self._enumerateItems[0]
+        self._default = default
+        self.__set_val_as_default()
         # array only support int/float
+
+    def __get_config(self):
+        config_dict = {}
+        for key in ['key', 'type', "enumerateItems", "isArray", "length", "default", "comments", "reference"]:
+                config_dict[key] = self.__getattr__('_'+key)
+        return config_dict
 
 
 class Parameters(object):
@@ -140,7 +165,7 @@ class Parameters(object):
             object.__setattr__(self, key, val)
         else:
             assert key in self.__keys_config.keys(), 'Parameters Errror: '+str(key)+' no in parameters config, please use add_key to add key'
-            self.__keys_objects[key].set_val(val, self.__debug)
+            self.__keys_objects[key]._ParametersKeys__set_val(val, self.__debug)
 
     def __repr__(self):
         keyval = dict(zip(self.keys(), self.vals()))
@@ -189,12 +214,12 @@ class Parameters(object):
         assert isinstance(parameters, dict)
         # self.__keys_objects
         for key, val in parameters.items():
-            self.__keys_objects[key].set_val(val, debug)
+            self.__keys_objects[key]._ParametersKeys__set_val(val, debug)
 
     def dump_values(self, debug=False):
         key_values = {}
         for key, key_obj in self.__keys_objects.items():
-            _val = key_obj.get_val(debug)
+            _val = key_obj.__get_val(debug)
             if hasattr(_val, 'copy'):
                 _val = _val.copy()
             key_values[key] = _val
@@ -228,17 +253,18 @@ class Parameters(object):
         else:
             raise ValueError('Please give a valid filename/filehandle')
 
-    def update_key(self, key, Type, enumerateItems= None, length=1, default=None):
-        assert Type in ['int', 'float', 'string', 'enumerate'], 'Parameters Errror: '+str(Type)+' not supported'
+    def update_key(self, key, Type, enumerateItems= None, isArray=False, length=1, default=None, comments=''):
+        assert Type in ['int', 'float', 'string', 'enumerate', 'bool'], 'Parameters Errror: '+str(Type)+' not supported'
         assert isinstance(length, int) and length > 0
-        _kobj = ParametersKeys(key, Type, None, enumerateItems = enumerateItems, length=length, default=default)
-        _feature = {'key': key, 'type': Type, 'enumerateItems': enumerateItems, 'length': length, 'default': default}
+        _kobj = ParametersKeys(key, Type, None, enumerateItems = enumerateItems, isArray=isArray, 
+            length=length, default=default, comments=comments)
+        # _feature = {'key': key, 'type': Type, 'enumerateItems': enumerateItems, 'length': length, 'default': default, "comments": comments}
         self.__keys_objects.update({key: _kobj})
-        self.__keys_config.update({key: _feature})
+        self.__keys_config.update({key: _kobj._ParametersKeys__get_config()})
 
     def reset_key(self, key):
         if key in self.__keys_objects:
-            self.__keys_objects[key].reset_val()
+            self.__keys_objects[key]._ParametersKeys__reset_val()
 
     def remove_key(self, key):
         if key in self.__keys_config:
@@ -250,7 +276,7 @@ class Parameters(object):
         return self.__keys_objects.keys()
 
     def vals(self):
-        return [self.__getattr__(key).get_val() for key in self.keys()]
+        return [self.__getattr__(key)._ParametersKeys__get_val() for key in self.keys()]
 
 
 def test():
@@ -334,15 +360,15 @@ def test():
 
     print('\n============================= Run LOAD Test =============================')
     print('\n>>> load:')
-    params2 = Parameters('test.json')
-    print('params2 == params', params2 == params)
+    _params = Parameters('test.json')
+    print('_params == params', _params == params)
     print(params)
-    print(params2)
+    print(_params)
     print('>>> loaded params:')
-    print(params2.dump_parameters())
+    print(_params.dump_parameters())
     print('>>> loaded config:')
-    print(params2.dump_config())
-    print(params2)
+    print(_params.dump_config())
+    print(_params)
 
 
     print('\n============================= Run key name Test =============================')
@@ -365,31 +391,52 @@ def test():
             print(e)
         print(_test_params)
 
-    print(params2)
-    print(params2.dump_config())
+    print(_params)
+    print(_params.dump_config())
     print('\n=========================== Run Enumerate Test =============================')
     try:
-        params2.runType = params2.runType.geometry_converge
+        _params.runType = _params.runType.geometry_converge
     except Exception as e:
         print(e)
     try:
-        params2.runType = params2.runType.frequency
+        _params.runType = _params.runType.frequency
     except Exception as e:
         print(e)
     try:
-        params2.runType = params2.runType.frequency
+        _params.runType = _params.runType.frequency
     except Exception as e:
         print(e)
     try:
-        params2.runType = params2.runType.frequency_analysis
+        _params.runType = _params.runType.frequency_analysis
     except Exception as e:
         print(e)
-    print(params2)
+    print(_params)
 
 def parse_json(json_file):
     with open(json_file) as fd:
         params_dict = json.load(fd)
-    print(json.dumps(params_dict, indent=4))
+    # print(json.dumps(params_dict, indent=4))
+    params = Parameters()
+    for _type, _keys_dict in params_dict.items():
+        length = 1
+        enumerateItems = None
+        isArray = False
+        if 'list_' in _type:
+            length = 10
+            isArray  = True
+            _type = _type.replace('list_', '')
+            assert _type in ['int', 'float', 'bool']
+        assert _type in ['int', 'float', 'string', 'enumerate', 'bool'], 'parse error: '+_type+' not support'
+        if _type == 'enumerate':
+            enumerateItems = ['????']
+        for _key, _key_config in _keys_dict.items():
+            if enumerateItems is None:
+                enumerateItems = _key_config.get('enumerateItems', None)
+            default = _key_config.get('default', None)
+            comments = _key_config.get('comments', '')
+            params.update_key(_key, _type, enumerateItems, isArray, length, default, comments)
+    params.dump_config('refined_'+json_file)
+
 
 if __name__ == '__main__':
     import argparse
