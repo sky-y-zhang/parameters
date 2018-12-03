@@ -10,7 +10,7 @@ class ParametersArray(list):
 
 
 class ParametersKeys(object):
-    def __init__(self, key, Type='int', val=None, enumerateItems=None, length=1, default=None):
+    def __init__(self, key, Type='int', val=None, isBoolean=False, enumerateItems=None, length=1, default=None, comments=''):
         self.__key = key
         self.__type= Type
         self.__val = val
@@ -18,6 +18,7 @@ class ParametersKeys(object):
         self.__enumerateItems = enumerateItems
         self.__default = default
         self.__self_check()
+        self.__comments = comments
 
     # def __setattr__(self, key, val):
     #     pass
@@ -30,6 +31,8 @@ class ParametersKeys(object):
         string = 'key '+self.__key+': '+str(self.get_val())
         if self.__type == 'enumerate':
             string += '\n    '+str(self.__enumerateItems)
+        if self.__comments != '':
+            string += '\n    '+self.__comments
         return string
 
     def get_val(self, debug=False):
@@ -385,8 +388,20 @@ def test():
         print(e)
     print(params2)
 
+def parse_json(json_file):
+    with open(json_file) as fd:
+        params_dict = json.load(fd)
+    print(json.dumps(params_dict, indent=4))
 
 if __name__ == '__main__':
-    test()
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-t', '--test',  help='run '+str(__file__)+' test', action='store_true')
+    parser.add_argument('-p', '--parse', help='parse json file', nargs=1)
+    args = parser.parse_args()
+    if args.test:
+        test()
+    else:
+        parse_json(args.parse[0])
 
 
