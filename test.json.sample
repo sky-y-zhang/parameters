@@ -1,0 +1,102 @@
+{
+  "__keys_config": {
+    "string": {
+      "key": "string",
+      "type": "string",
+      "enumerateItems": null,
+      "enumerateVals": null,
+      "isArray": false,
+      "length": 1,
+      "default": "",
+      "comments": "",
+      "reference": ""
+    },
+    "int": {
+      "key": "int",
+      "type": "int",
+      "enumerateItems": null,
+      "enumerateVals": null,
+      "isArray": false,
+      "length": 1,
+      "default": 0,
+      "comments": "",
+      "reference": ""
+    },
+    "float": {
+      "key": "float",
+      "type": "float",
+      "enumerateItems": null,
+      "enumerateVals": null,
+      "isArray": false,
+      "length": 1,
+      "default": 0.0,
+      "comments": "",
+      "reference": ""
+    },
+    "enumerate": {
+      "key": "enumerate",
+      "type": "enumerate",
+      "enumerateItems": [
+        "1",
+        "2",
+        "3" ],
+      "enumerateVals": null,
+      "isArray": false,
+      "length": 1,
+      "default": "1",
+      "comments": "",
+      "reference": ""
+    },
+    "floatArray": {
+      "key": "floatArray",
+      "type": "float",
+      "enumerateItems": null,
+      "enumerateVals": null,
+      "isArray": true,
+      "length": 10,
+      "default": 2.0,
+      "comments": "",
+      "reference": ""
+    },
+    "runType": {
+      "key": "runType",
+      "type": "enumerate",
+      "enumerateItems": [
+        "electron_converge",
+        "geometry_converge",
+        "frequency" ],
+      "enumerateVals": null,
+      "isArray": false,
+      "length": 1,
+      "default": "geometry_converge",
+      "comments": "",
+      "reference": ""
+    },
+    "ialgo": {
+      "key": "ialgo",
+      "type": "enumerate",
+      "enumerateItems": [
+        "method1",
+        "method2",
+        "method3" ],
+      "enumerateVals": [
+        "1",
+        "-1",
+        "0" ],
+      "isArray": false,
+      "length": 1,
+      "default": "method1",
+      "comments": "",
+      "reference": ""
+    }
+  },
+  "__keys_values": {
+    "string": "STRINGSING",
+    "int": 1,
+    "float": 1.1,
+    "enumerate": "1",
+    "floatArray": [ 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0 ],
+    "runType": "geometry_converge",
+    "ialgo": "method1"
+  }
+}

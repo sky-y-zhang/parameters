@@ -55,11 +55,23 @@ class ParametersKeys(object):
             self.__set_val_as_default(debug)
         return self._val
 
+    def __dump_output(self):
+        if self._type == 'string':
+            return self._val
+        elif self._type == 'enumerate':
+            if self._enumerateVals is not None:
+                return self._enumerateVals[self._enumerateItems.index(self._val)]
+            return self._val
+        elif self._isArray:
+            return ' '.join([json.dumps(_) for _ in self._val])
+        else:
+            return json.dumps(self._val)
+
     def __set_val(self, val, debug=False):
         if self._length == 1:
             val = self.__format_val(val)
         else:
-            assert isinstance(val, list) and len(val) == self._val, 'Parameters Errror: Please give '+str(self._length)+' values'
+            assert isinstance(val, list) and len(val) == self._length, 'Parameters Errror: '+self._key+' Please give '+str(self._length)+' values'
             for i, x in enumerate(val):
                 val[i] = self.__format_val(x)
         self._val = val
@@ -108,8 +120,7 @@ class ParametersKeys(object):
         assert re.sub('\d', '', self._key).replace('_', '').isalpha(), 'Parameters Errror: key \"'+str(self._key)+'\": only letter/number and _ is allowed in key'
         if self._isArray: 
             assert self._type in ['float', 'int', 'bool'], 'Parameters ERROR: only float/int/bool can be element of array'
-        
-        elif self._type == 'bool':
+        if self._type == 'bool':
             self._enumerateItems = [True, False]
         default = self._default
         if self._type == 'float':
@@ -145,11 +156,11 @@ class Parameters(object):
         self.__keys_objects= {}
         if param_json is not None:
             try:
-                self.load_config(param_json)
+                self.LOAD_CONFIG(param_json)
             except Exception as e:
                 if debug: print('param_json is not a config, '+str(e))
                 try:
-                    self.load_parameters(param_json)
+                    self.LOAD_PARAMETERS(param_json)
                 except Exception as e:
                     if debug: print('param_json is not a values, '+str(e))
         self.__debug = debug
@@ -169,16 +180,16 @@ class Parameters(object):
             self.__keys_objects[key]._ParametersKeys__set_val(val, self.__debug)
 
     def __repr__(self):
-        keyval = dict(zip(self.keys(), self.vals()))
+        keyval = dict(zip(self.__keys(), self.__vals()))
         return self.__format_string_parameters(keyval)
 
     def __format_string_parameters(self, json_obj=None):
-        json_obj = json_obj or self.dump_parameters()
+        json_obj = json_obj or self.DUMP_PARAMETERS()
         string = json.dumps(json_obj, indent=2)
         string = re.sub('\n\s+(?=\w|])', ' ', string)
         return string
 
-    def load_config(self, keys_config):
+    def LOAD_CONFIG(self, keys_config):
         if isinstance(keys_config, dict):
             keys_config = copy.deepcopy(keys_config)
         elif isinstance(keys_config, six.string_types):
@@ -199,14 +210,14 @@ class Parameters(object):
             comments = feature.get('comments', '')
             reference = feature.get('reference', '')
             try:
-                self.update_key(key, Type, 
+                self.UPDATE_KEY(key, Type, 
                     enumerateItems=enumerateItems, enumerateVals=enumerateVals, 
                     isArray=isArray, length=length, 
                     default=default, comments=comments, reference=reference)
             except Exception as e:
                 raise e
 
-    def dump_config(self, filename=None):
+    def DUMP_CONFIG(self, filename=None):
         if filename is None:
             return copy.deepcopy(self.__keys_config)
         else:
@@ -218,22 +229,22 @@ class Parameters(object):
             else:
                 raise ValueError('Please give a correct filename or filehandle')
 
-    def load_values(self, parameters, debug=False):
+    def LOAD_VALUES(self, parameters, debug=False):
         assert isinstance(parameters, dict)
         # self.__keys_objects
         for key, val in parameters.items():
             self.__keys_objects[key]._ParametersKeys__set_val(val, debug)
 
-    def dump_values(self, debug=False):
+    def DUMP_VALUES(self, debug=False):
         key_values = {}
         for key, key_obj in self.__keys_objects.items():
-            _val = key_obj.__get_val(debug)
+            _val = key_obj._ParametersKeys__get_val(debug)
             if hasattr(_val, 'copy'):
                 _val = _val.copy()
             key_values[key] = _val
         return key_values
 
-    def load_parameters(self, parameters_obj):
+    def LOAD_PARAMETERS(self, parameters_obj):
         if isinstance(parameters_obj, six.string_types):
             with open(parameters_obj) as fd:
                 parameters_obj = json.load(fd)
@@ -241,13 +252,13 @@ class Parameters(object):
             parameters_obj = json.load(parameters_obj)
         else:
             assert isinstance(parameters_obj, dict), 'Please give a valid dict, filename or filehandle'
-        self.load_config(parameters_obj['__keys_config'])
-        self.load_values(parameters_obj['__keys_values'])
+        self.LOAD_CONFIG(parameters_obj['__keys_config'])
+        self.LOAD_VALUES(parameters_obj['__keys_values'])
 
-    def dump_parameters(self, filename=None):
+    def DUMP_PARAMETERS(self, filename=None):
         parameters_obj = {
             '__keys_config': self.__keys_config, 
-            '__keys_values': self.dump_values()
+            '__keys_values': self.DUMP_VALUES()
             }
         if filename is None:
             return parameters_obj
@@ -261,7 +272,13 @@ class Parameters(object):
         else:
             raise ValueError('Please give a valid filename/filehandle')
 
-    def update_key(self, key, Type, 
+    def DUMP_OUTPUT(self, filename=None):
+        string = ''
+        for key in self.__keys():
+            string += key + ' = '+ self.__keys_objects[key]._ParametersKeys__dump_output() + '\n'
+        return string
+
+    def UPDATE_KEY(self, key, Type, 
             enumerateItems= None, enumerateVals = None,
             isArray=False, length=1, default=None, 
             comments='', reference=''):
@@ -281,7 +298,7 @@ class Parameters(object):
             assert isinstance(enumerateItems, list) and len(enumerateItems) > 0, 'Parameters Errror: enumerate must have items'
             if enumerateVals is not None and isinstance(enumerateVals, six.string_types):
                 enumerateVals = re.split('\s*\|\s*|\s*,\s*', enumerateVals)
-                assert len(enumerateVals) == len(enumerateItems), 'enumerateItems and enumerateVals should have same length'
+                assert len(enumerateVals) == len(enumerateItems), key+': enumerateItems and enumerateVals should have same length'
         if isinstance(isArray, six.string_types):
             if isArray.lower() =='true':
                 isArray = True
@@ -298,21 +315,21 @@ class Parameters(object):
         self.__keys_objects.update({key: _kobj})
         self.__keys_config.update({key: _kobj._ParametersKeys__get_config()})
 
-    def reset_key(self, key):
+    def RESET_KEY(self, key):
         if key in self.__keys_objects:
             self.__keys_objects[key]._ParametersKeys__reset_val()
 
-    def remove_key(self, key):
+    def REMOVE_KEY(self, key):
         if key in self.__keys_config:
             del self.__keys_config[key]
             if key in self.__keys_objects:
                 del self.__keys_objects[key]
 
-    def keys(self):
+    def __keys(self):
         return self.__keys_objects.keys()
 
-    def vals(self):
-        return [self.__getattr__(key)._ParametersKeys__get_val() for key in self.keys()]
+    def __vals(self):
+        return [self.__getattr__(key)._ParametersKeys__get_val() for key in self.__keys()]
 
 
 def test():
@@ -378,19 +395,19 @@ def test():
         enumerateItems = None
         if _type == 'enumerate':
             enumerateItems = ['x', 'y', 'z']
-        _test_params.update_key('test', _type, enumerateItems = enumerateItems)
+        _test_params.UPDATE_KEY('test', _type, enumerateItems = enumerateItems)
         print('>>> update test to '+str(_type))
         print(_test_params)
-    _test_params.remove_key('test')
+    _test_params.REMOVE_KEY('test')
     print('>>> remove test key')
     print(_test_params)
 
     print('\n============================= Run LOAD Test =============================')
     print(params)
-    print('>>> dump_parameters')
-    print(params.dump_parameters())
-    print('>>> dump_parameters to test.json')
-    params.dump_parameters('test.json')
+    print('>>> DUMP_PARAMETERS')
+    print(params.DUMP_PARAMETERS())
+    print('>>> DUMP_PARAMETERS to test.json')
+    params.DUMP_PARAMETERS('test.json')
     print('>>> cat test.json')
     import os; os.system('cat test.json')
 
@@ -401,9 +418,9 @@ def test():
     print(params)
     print(_params)
     print('>>> loaded params:')
-    print(_params.dump_parameters())
+    print(_params.DUMP_PARAMETERS())
     print('>>> loaded config:')
-    print(_params.dump_config())
+    print(_params.DUMP_CONFIG())
     print(_params)
 
 
@@ -411,7 +428,7 @@ def test():
     for _name in ['-', '*', 'test123', '123test', 'test_123', '_test123__', '_ser789*(&']:
         print('test name:  \"'+str(_name)+'\"')
         try:
-            _test_params.update_key(_name, 'int')
+            _test_params.UPDATE_KEY(_name, 'int')
             print('Success: '+_name)
         except Exception as e:
             print(e)
@@ -420,15 +437,15 @@ def test():
 
     print('\n============================= Run Array Test =============================')
     for _type in ['int', 'float', 'string', 'enumerate']:
-        print('>>> update_key Array with length 10: '+_type)
+        print('>>> UPDATE_KEY Array with length 10: '+_type)
         try:
-            _test_params.update_key(_type+'Array', _type, length=10)
+            _test_params.UPDATE_KEY(_type+'Array', _type, length=10)
         except Exception as e:
             print(e)
         print(_test_params)
 
     print(_params)
-    print(_params.dump_config())
+    print(_params.DUMP_CONFIG())
     print('\n=========================== Run Enumerate Test =============================')
     try:
         _params.runType = _params.runType.geometry_converge
@@ -470,31 +487,41 @@ def parse_primitive_json(json_file):
                 enumerateItems = _key_config.get('enumerateItems', None)
             default = _key_config.get('default', None)
             comments = _key_config.get('comments', '')
-            params.update_key(_key, _type, enumerateItems, isArray, length, default, comments)
-    params.dump_config('refined_'+json_file)
+            params.UPDATE_KEY(_key, _type, enumerateItems, isArray, length, default, comments)
+    params.DUMP_CONFIG('refined_'+json_file)
 
 
-def parse_json(json_file):
+def parse_config(json_file):
     params = Parameters(debug=True)
-    params.load_config(json_file)
-    params.dump_config('refined_'+json_file)
+    params.LOAD_CONFIG(json_file)
+    params.DUMP_CONFIG('refined_'+json_file)
+
+
+def parse_parameters(json_file):
+    params = Parameters(debug=True)
+    params.LOAD_PARAMETERS(json_file)
+    params.DUMP_PARAMETERS('refined_'+json_file)
+    print(params.DUMP_OUTPUT())
+    print(params)
+
 
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('-t', '--test',  help='run '+str(__file__)+' test', action='store_true')
+    parser.add_argument('-pc', '--parse_config', help='parse config json file', nargs=1)
     parser.add_argument('-pr', '--parse_primitive', help='parse primitive json file', nargs=1)
-    parser.add_argument('-p', '--parse', help='parse config json file', nargs=1)
+    parser.add_argument('-pp', '--parse_parameters', help='parse parameters json file', nargs=1)
     args = parser.parse_args()
     print(args)
     if args.test:
         test()
-    elif args.parse is not None and len(args.parse)>0:
-        parse_json(args.parse[0])
+    elif args.parse_parameters is not None and len(args.parse_parameters)>0:
+        parse_parameters(args.parse_parameters[0])
     elif args.parse_primitive is not None and  len(args.parse_primitive)>0:
         parse_primitive_json(args.parse_primitive[0])
-    else:
-        raise ValueError
+    elif args.parse_config is not None and len(args.parse_config) > 0:
+        parse_config(args.parse_config)
 
 
 
