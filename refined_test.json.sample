@@ -3,8 +3,8 @@
     "string": {
       "key": "string",
       "type": "string",
-      "enumItems": null,
-      "enumVals": null,
+      "enumerateItems": null,
+      "enumerateVals": null,
       "isArray": false,
       "length": 1,
       "default": "",
@@ -14,8 +14,8 @@
     "int": {
       "key": "int",
       "type": "int",
-      "enumItems": null,
-      "enumVals": null,
+      "enumerateItems": null,
+      "enumerateVals": null,
       "isArray": false,
       "length": 1,
       "default": 0,
@@ -25,22 +25,22 @@
     "float": {
       "key": "float",
       "type": "float",
-      "enumItems": null,
-      "enumVals": null,
+      "enumerateItems": null,
+      "enumerateVals": null,
       "isArray": false,
       "length": 1,
       "default": 0.0,
       "comments": "",
       "reference": ""
     },
-    "enum": {
-      "key": "enum",
-      "type": "enum",
-      "enumItems": [
+    "enumerate": {
+      "key": "enumerate",
+      "type": "enumerate",
+      "enumerateItems": [
         "1",
         "2",
         "3" ],
-      "enumVals": null,
+      "enumerateVals": null,
       "isArray": false,
       "length": 1,
       "default": "1",
@@ -50,8 +50,8 @@
     "floatArray": {
       "key": "floatArray",
       "type": "float",
-      "enumItems": null,
-      "enumVals": null,
+      "enumerateItems": null,
+      "enumerateVals": null,
       "isArray": true,
       "length": 10,
       "default": 2.0,
@@ -60,12 +60,12 @@
     },
     "runType": {
       "key": "runType",
-      "type": "enum",
-      "enumItems": [
+      "type": "enumerate",
+      "enumerateItems": [
         "electron_converge",
         "geometry_converge",
         "frequency" ],
-      "enumVals": null,
+      "enumerateVals": null,
       "isArray": false,
       "length": 1,
       "default": "geometry_converge",
@@ -74,12 +74,12 @@
     },
     "ialgo": {
       "key": "ialgo",
-      "type": "enum",
-      "enumItems": [
+      "type": "enumerate",
+      "enumerateItems": [
         "method1",
         "method2",
         "method3" ],
-      "enumVals": [
+      "enumerateVals": [
         "1",
         "-1",
         "0" ],
@@ -94,7 +94,7 @@
     "string": "STRINGSING",
     "int": 1,
     "float": 1.1,
-    "enum": "1",
+    "enumerate": "1",
     "floatArray": [ 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0 ],
     "runType": "geometry_converge",
     "ialgo": "method1"

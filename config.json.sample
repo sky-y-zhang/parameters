@@ -1,0 +1,91 @@
+{
+  "string": {
+    "key": "string",
+    "type": "string",
+    "enumItems": null,
+    "enumVals": null,
+    "isArray": false,
+    "length": 1,
+    "default": "",
+    "comments": "",
+    "reference": ""
+  },
+  "int": {
+    "key": "int",
+    "type": "int",
+    "enumItems": null,
+    "enumVals": null,
+    "isArray": false,
+    "length": 1,
+    "default": 0,
+    "comments": "",
+    "reference": ""
+  },
+  "float": {
+    "key": "float",
+    "type": "float",
+    "enumItems": null,
+    "enumVals": null,
+    "isArray": false,
+    "length": 1,
+    "default": 0.0,
+    "comments": "",
+    "reference": ""
+  },
+  "enum": {
+    "key": "enum",
+    "type": "enum",
+    "enumItems": [
+      "1",
+      "2",
+      "3" ],
+    "enumVals": null,
+    "isArray": false,
+    "length": 1,
+    "default": "1",
+    "comments": "",
+    "reference": ""
+  },
+  "floatArray": {
+    "key": "floatArray",
+    "type": "float",
+    "enumItems": null,
+    "enumVals": null,
+    "isArray": true,
+    "length": 10,
+    "default": 2.0,
+    "comments": "",
+    "reference": ""
+  },
+  "runType": {
+    "key": "runType",
+    "type": "enum",
+    "enumItems": [
+      "electron_converge",
+      "geometry_converge",
+      "frequency" ],
+    "enumVals": null,
+    "isArray": false,
+    "length": 1,
+    "default": "geometry_converge",
+    "comments": "",
+    "reference": ""
+  },
+  "ialgo": {
+    "key": "ialgo",
+    "type": "enum",
+    "enumItems": [
+      "method1",
+      "method2",
+      "method3" ],
+    "enumVals": [
+      "1",
+      "-1",
+      "0" ],
+    "isArray": false,
+    "length": 1,
+    "default": "method1",
+    "comments": "",
+    "reference": ""
+  }
+}
